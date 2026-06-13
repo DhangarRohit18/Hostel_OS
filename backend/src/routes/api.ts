@@ -67,6 +67,7 @@ router.post('/visitors/scan', authenticateJWT as any, requireRole(['GUARD', 'ADM
 router.post('/billing/fee', authenticateJWT as any, requireRole(['ADMIN']) as any, BillingController.createFee as any);
 router.post('/billing/fee/pay', authenticateJWT as any, BillingController.payFee as any);
 router.post('/billing/electricity', authenticateJWT as any, requireRole(['ADMIN']) as any, BillingController.createElectricityBill as any);
+router.post('/billing/electricity/pay', authenticateJWT as any, BillingController.payElectricityBill as any);
 router.get('/billing/all', authenticateJWT as any, BillingController.listBills as any);
 
 // ==========================================

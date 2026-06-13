@@ -225,33 +225,44 @@ const getMockDataFallback = (url: string, options: RequestInit = {}) => {
   }
 
   if (path.includes('/billing')) {
-    const list = getDb('billing', [
-      { id: '1', type: 'HOSTEL_FEE', amount: 45000, dueDate: new Date(Date.now() + 86400000 * 10).toISOString(), status: 'PENDING', student: { id: 'mock-stud-id', rollNumber: 'CS2026091', user: { name: 'Aman Sharma' } } },
-      { id: '2', type: 'MESS_FEE', amount: 15000, dueDate: new Date().toISOString(), status: 'PAID', student: { id: 'mock-stud-id', rollNumber: 'CS2026091', user: { name: 'Aman Sharma' } } }
+    const feeList = getDb('billing', [
+      { id: '1', type: 'HOSTEL_FEE', amount: 45000, dueDate: new Date(Date.now() + 86400000 * 10).toISOString(), status: 'UNPAID', student: { id: 'mock-stud-id', rollNumber: 'CS2026091', user: { name: 'Aman Sharma' } } },
+      { id: '2', type: 'MESS_FEE', amount: 15000, dueDate: new Date(Date.now() + 86400000 * 30).toISOString(), status: 'UNPAID', student: { id: 'mock-stud-id', rollNumber: 'CS2026091', user: { name: 'Aman Sharma' } } },
+      { id: '3', type: 'SECURITY_DEPOSIT', amount: 5000, dueDate: new Date(Date.now() - 86400000 * 30).toISOString(), status: 'PAID', student: { id: 'mock-stud-id', rollNumber: 'CS2026091', user: { name: 'Aman Sharma' } } }
     ]);
+    const elecList = getDb('electricity', [
+      { id: 'e1', month: 5, year: 2026, readingPrev: 1120, readingCurrent: 1198, consumption: 78, amount: 624, status: 'UNPAID', room: { number: '101' } },
+      { id: 'e2', month: 4, year: 2026, readingPrev: 1040, readingCurrent: 1120, consumption: 80, amount: 640, status: 'PAID', room: { number: '101' } }
+    ]);
+
     if (method === 'POST' && options.body) {
       try {
         const body = JSON.parse(options.body as string);
         if (path.includes('/fee/pay')) {
-          const updated = list.map((f: any) => f.id === body.feeId ? { ...f, status: 'PAID' } : f);
+          const updated = feeList.map((f: any) => f.id === body.feeId ? { ...f, status: 'PAID', paidAt: new Date().toISOString(), receiptUrl: `RECEIPT-${body.feeId.substring(0,6).toUpperCase()}` } : f);
           saveDb('billing', updated);
-          return { message: 'Payment successfully processed! Receipt generated.' };
+          return { message: 'Payment successfully processed! Receipt generated.', receiptUrl: `RECEIPT-${body.feeId.substring(0,6).toUpperCase()}` };
+        }
+        if (path.includes('/electricity/pay')) {
+          const updated = elecList.map((e: any) => e.id === body.billId ? { ...e, status: 'PAID' } : e);
+          saveDb('electricity', updated);
+          return { message: 'Electricity payment recorded successfully.' };
         }
 
         const newItem = {
-          id: String(list.length + 1),
+          id: String(feeList.length + 1),
           type: body.type || 'HOSTEL_FEE',
           amount: Number(body.amount || 1200),
           dueDate: body.dueDate || new Date().toISOString(),
-          status: 'PENDING',
+          status: 'UNPAID',
           student: { id: 'mock-stud-id', rollNumber: 'CS2026091', user: { name: 'Aman Sharma' } }
         };
-        list.push(newItem);
-        saveDb('billing', list);
+        feeList.push(newItem);
+        saveDb('billing', feeList);
         return { message: 'Fee invoice dispatched successfully', fee: newItem };
       } catch (e) {}
     }
-    return { fees: list };
+    return { fees: feeList, electricityBills: elecList };
   }
 
   if (path.includes('/complaints')) {

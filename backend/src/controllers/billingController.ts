@@ -50,6 +50,25 @@ export class BillingController {
     }
   }
 
+  // Pay Electricity Bill / Update status
+  static async payElectricityBill(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { billId } = req.body;
+      if (!billId) return res.status(400).json({ error: 'billId is required.' });
+
+      const updated = await prisma.electricityBill.update({
+        where: { id: billId },
+        data: {
+          status: 'PAID',
+        },
+      });
+
+      return res.json({ message: 'Electricity payment recorded successfully', bill: updated });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   // Submit Room Meter Reading & Generate Electricity Bill (Admin)
   static async createElectricityBill(req: AuthenticatedRequest, res: Response) {
     try {

@@ -38,6 +38,20 @@ export const StudentDashboard: React.FC = () => {
   const [fees, setFees] = useState<any[]>([]);
   const [electricityBills, setElectricityBills] = useState<any[]>([]);
 
+  // Razorpay mock modal state
+  const [showRazorpayModal, setShowRazorpayModal] = useState(false);
+  const [razorpayFeeId, setRazorpayFeeId] = useState('');
+  const [razorpayAmount, setRazorpayAmount] = useState(0);
+  const [razorpayType, setRazorpayType] = useState('');
+  const [razorpayBillType, setRazorpayBillType] = useState<'fee' | 'electricity'>('fee');
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'upi' | 'card' | 'netbanking'>('upi');
+  const [upiId, setUpiId] = useState('student@ybl');
+  const [cardNum, setCardNum] = useState('4111 1111 1111 1111');
+  const [cardExpiry, setCardExpiry] = useState('12/28');
+  const [cardCvv, setCardCvv] = useState('');
+
   const fetchData = async () => {
     try {
       const annRes = await apiRequest('/api/announcements');
@@ -130,16 +144,38 @@ export const StudentDashboard: React.FC = () => {
     }
   };
 
-  const payBill = async (feeId: string) => {
+  const openRazorpay = (id: string, amount: number, type: string, billType: 'fee' | 'electricity') => {
+    setRazorpayFeeId(id);
+    setRazorpayAmount(amount);
+    setRazorpayType(type);
+    setRazorpayBillType(billType);
+    setPaymentSuccess(false);
+    setPaymentLoading(false);
+    setSelectedMethod('upi');
+    setCardCvv('');
+    setShowRazorpayModal(true);
+  };
+
+  const executePayment = async () => {
+    setPaymentLoading(true);
+    await new Promise(r => setTimeout(r, 2200)); // simulate gateway processing
     try {
-      await apiRequest('/api/billing/fee/pay', {
-        method: 'POST',
-        body: JSON.stringify({ feeId }),
-      });
-      alert('Mock payment successful! Receipt generated.');
+      if (razorpayBillType === 'fee') {
+        await apiRequest('/api/billing/fee/pay', {
+          method: 'POST',
+          body: JSON.stringify({ feeId: razorpayFeeId }),
+        });
+      } else {
+        await apiRequest('/api/billing/electricity/pay', {
+          method: 'POST',
+          body: JSON.stringify({ billId: razorpayFeeId }),
+        });
+      }
+      setPaymentSuccess(true);
       fetchData();
     } catch (err: any) {
-      alert(err.message);
+      alert('Payment failed: ' + err.message);
+      setPaymentLoading(false);
     }
   };
 
@@ -544,13 +580,14 @@ export const StudentDashboard: React.FC = () => {
                     <div>
                       {f.status === 'UNPAID' ? (
                         <button
-                          onClick={() => payBill(f.id)}
-                          className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl transition-all"
+                          onClick={() => openRazorpay(f.id, f.amount, f.type, 'fee')}
+                          className="px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-indigo-900/30 flex items-center gap-1.5"
                         >
-                          Pay Now
+                          <svg width="12" height="12" viewBox="0 0 28 28" fill="none"><path d="M14 0C6.268 0 0 6.268 0 14s6.268 14 14 14 14-6.268 14-14S21.732 0 14 0z" fill="#072654"/><path d="M19.5 8.5H12l-3 11h3l1-4h4.5c2.5 0 4-1.5 4-3.5 0-2-1.5-3.5-2-3.5z" fill="#fff"/></svg>
+                          Pay via Razorpay
                         </button>
                       ) : (
-                        <span className="text-xs font-bold px-3 py-1 bg-green-950 text-green-300 rounded-full">Paid</span>
+                        <span className="text-xs font-bold px-3 py-1 bg-green-950 text-green-300 rounded-full">✓ Paid</span>
                       )}
                     </div>
                   </div>
@@ -573,14 +610,191 @@ export const StudentDashboard: React.FC = () => {
                         <p className="text-sm font-bold text-slate-200">₹{e.amount} (Consumption: {e.consumption} Units)</p>
                         <p className="text-xs text-slate-400">Month: {e.month}/{e.year} • Meter Reading: {e.readingPrev} to {e.readingCurrent}</p>
                       </div>
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                        e.status === 'PAID' ? 'bg-green-950 text-green-300' : 'bg-yellow-950 text-yellow-300'
-                      }`}>{e.status}</span>
+                      <div className="flex items-center gap-2">
+                        {e.status === 'UNPAID' || e.status === 'PENDING' ? (
+                          <button
+                            onClick={() => openRazorpay(e.id, e.amount, `Electricity Bill ${e.month}/${e.year}`, 'electricity')}
+                            className="px-3 py-1.5 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-500 hover:to-orange-500 text-white text-xs font-bold rounded-xl transition-all shadow-lg shadow-yellow-900/30"
+                          >
+                            Pay ₹{e.amount}
+                          </button>
+                        ) : (
+                          <span className="text-xs font-bold px-3 py-1 bg-green-950 text-green-300 rounded-full">✓ Paid</span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ============ RAZORPAY MOCK CHECKOUT MODAL ============ */}
+      {showRazorpayModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center"
+          style={{ background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(8px)' }}
+          onClick={(e) => { if ((e.target as any) === e.currentTarget && !paymentLoading) setShowRazorpayModal(false); }}
+        >
+          <div
+            className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl"
+            style={{ background: '#fff', fontFamily: 'Inter, sans-serif' }}
+          >
+            {/* Razorpay Header */}
+            <div style={{ background: 'linear-gradient(135deg, #072654 0%, #1a56a0 100%)', padding: '20px 24px' }} className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div style={{ background: '#fff', borderRadius: 8, padding: '6px 10px' }}>
+                  <svg width="80" height="20" viewBox="0 0 120 32" fill="none">
+                    <path d="M0 16C0 7.163 7.163 0 16 0h88c8.837 0 16 7.163 16 16s-7.163 16-16 16H16C7.163 32 0 24.837 0 16z" fill="#072654"/>
+                    <text x="8" y="22" fontFamily="Arial" fontWeight="bold" fontSize="14" fill="#3395FF">razorpay</text>
+                  </svg>
+                </div>
+                <div>
+                  <p style={{ color: '#a8c8ff', fontSize: 11 }}>Smart Hostel OS</p>
+                  <p style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>₹{razorpayAmount.toLocaleString('en-IN')}</p>
+                </div>
+              </div>
+              {!paymentLoading && !paymentSuccess && (
+                <button
+                  onClick={() => setShowRazorpayModal(false)}
+                  style={{ color: '#a8c8ff', background: 'none', border: 'none', cursor: 'pointer', fontSize: 22 }}
+                >✕</button>
+              )}
+            </div>
+
+            <div style={{ padding: '0 24px 24px' }}>
+              {/* Order Summary */}
+              <div style={{ background: '#f0f6ff', borderRadius: 10, padding: '12px 16px', margin: '18px 0 16px' }}>
+                <p style={{ color: '#072654', fontWeight: 600, fontSize: 13, marginBottom: 4 }}>Payment For</p>
+                <p style={{ color: '#1a56a0', fontSize: 14, fontWeight: 700 }}>{razorpayType.replace('_', ' ')}</p>
+                <p style={{ color: '#555', fontSize: 12, marginTop: 2 }}>Order ID: RP{Math.random().toString(36).substring(2,10).toUpperCase()}</p>
+              </div>
+
+              {paymentSuccess ? (
+                /* Success State */
+                <div style={{ textAlign: 'center', padding: '20px 0 10px' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#e6f9f0', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+                    <svg width="32" height="32" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="#00b55a"/><path d="M9 16l5 5 9-9" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                  </div>
+                  <p style={{ color: '#00b55a', fontWeight: 700, fontSize: 18, marginBottom: 6 }}>Payment Successful!</p>
+                  <p style={{ color: '#555', fontSize: 13 }}>₹{razorpayAmount.toLocaleString('en-IN')} paid successfully</p>
+                  <p style={{ color: '#aaa', fontSize: 11, marginTop: 4 }}>Receipt will be emailed to your registered address</p>
+                  <button
+                    onClick={() => setShowRazorpayModal(false)}
+                    style={{ marginTop: 20, background: 'linear-gradient(135deg, #072654, #1a56a0)', color: '#fff', border: 'none', borderRadius: 10, padding: '12px 40px', fontWeight: 700, fontSize: 14, cursor: 'pointer', width: '100%' }}
+                  >Done</button>
+                </div>
+              ) : paymentLoading ? (
+                /* Loading State */
+                <div style={{ textAlign: 'center', padding: '30px 0 20px' }}>
+                  <div style={{ width: 48, height: 48, border: '4px solid #e5e7eb', borderTop: '4px solid #3395FF', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+                  <p style={{ color: '#1a56a0', fontWeight: 600, fontSize: 15 }}>Processing Payment...</p>
+                  <p style={{ color: '#aaa', fontSize: 12, marginTop: 4 }}>Please do not close this window</p>
+                  <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                </div>
+              ) : (
+                /* Payment Form */
+                <>
+                  {/* Method Tabs */}
+                  <div style={{ display: 'flex', borderRadius: 10, background: '#f3f4f6', padding: 4, marginBottom: 20 }}>
+                    {(['upi', 'card', 'netbanking'] as const).map(m => (
+                      <button
+                        key={m}
+                        onClick={() => setSelectedMethod(m)}
+                        style={{
+                          flex: 1,
+                          padding: '8px 0',
+                          border: 'none',
+                          borderRadius: 8,
+                          cursor: 'pointer',
+                          fontWeight: 600,
+                          fontSize: 12,
+                          transition: 'all 0.2s',
+                          background: selectedMethod === m ? '#072654' : 'transparent',
+                          color: selectedMethod === m ? '#fff' : '#666',
+                        }}
+                      >
+                        {m === 'upi' ? '📱 UPI' : m === 'card' ? '💳 Card' : '🏦 Netbanking'}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* UPI Method */}
+                  {selectedMethod === 'upi' && (
+                    <div>
+                      <label style={{ color: '#333', fontWeight: 600, fontSize: 13, display: 'block', marginBottom: 6 }}>UPI ID</label>
+                      <input
+                        value={upiId}
+                        onChange={e => setUpiId(e.target.value)}
+                        placeholder="yourname@upi"
+                        style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: 10, padding: '11px 14px', fontSize: 14, color: '#111', outline: 'none', boxSizing: 'border-box' }}
+                      />
+                      <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
+                        {['@ybl', '@oksbi', '@paytm', '@gpay'].map(suffix => (
+                          <button key={suffix} onClick={() => setUpiId(`student${suffix}`)} style={{ padding: '5px 12px', border: '1.5px solid #d1d5db', borderRadius: 20, fontSize: 11, cursor: 'pointer', background: '#fff', color: '#333' }}>{suffix}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Card Method */}
+                  {selectedMethod === 'card' && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      <div>
+                        <label style={{ color: '#333', fontWeight: 600, fontSize: 13, display: 'block', marginBottom: 6 }}>Card Number</label>
+                        <input
+                          value={cardNum}
+                          onChange={e => setCardNum(e.target.value)}
+                          placeholder="1234 5678 9012 3456"
+                          style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: 10, padding: '11px 14px', fontSize: 14, color: '#111', outline: 'none', boxSizing: 'border-box', letterSpacing: 2 }}
+                        />
+                      </div>
+                      <div style={{ display: 'flex', gap: 12 }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ color: '#333', fontWeight: 600, fontSize: 13, display: 'block', marginBottom: 6 }}>Expiry</label>
+                          <input value={cardExpiry} onChange={e => setCardExpiry(e.target.value)} placeholder="MM/YY" style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: 10, padding: '11px 14px', fontSize: 14, color: '#111', outline: 'none', boxSizing: 'border-box' }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ color: '#333', fontWeight: 600, fontSize: 13, display: 'block', marginBottom: 6 }}>CVV</label>
+                          <input value={cardCvv} onChange={e => setCardCvv(e.target.value)} placeholder="• • •" type="password" maxLength={3} style={{ width: '100%', border: '1.5px solid #d1d5db', borderRadius: 10, padding: '11px 14px', fontSize: 14, color: '#111', outline: 'none', boxSizing: 'border-box' }} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Netbanking Method */}
+                  {selectedMethod === 'netbanking' && (
+                    <div>
+                      <label style={{ color: '#333', fontWeight: 600, fontSize: 13, display: 'block', marginBottom: 10 }}>Select Your Bank</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                        {['SBI', 'HDFC', 'ICICI', 'Axis', 'Kotak', 'PNB'].map(bank => (
+                          <button key={bank} style={{ padding: '10px', border: '1.5px solid #d1d5db', borderRadius: 10, cursor: 'pointer', background: '#fff', fontSize: 13, fontWeight: 600, color: '#333', transition: 'all 0.15s' }}
+                            onMouseEnter={e => (e.currentTarget.style.borderColor = '#072654')}
+                            onMouseLeave={e => (e.currentTarget.style.borderColor = '#d1d5db')}
+                          >{bank}</button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Secure Pay Button */}
+                  <button
+                    onClick={executePayment}
+                    style={{ width: '100%', marginTop: 20, background: 'linear-gradient(135deg, #072654 0%, #3395FF 100%)', color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontWeight: 700, fontSize: 16, cursor: 'pointer', letterSpacing: 0.5 }}
+                  >
+                    🔒 Pay ₹{razorpayAmount.toLocaleString('en-IN')} Securely
+                  </button>
+
+                  {/* Security Badge */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 14 }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2L3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4z" fill="#00b55a"/></svg>
+                    <span style={{ color: '#aaa', fontSize: 11 }}>Secured by Razorpay • 256-bit SSL encryption</span>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       )}
