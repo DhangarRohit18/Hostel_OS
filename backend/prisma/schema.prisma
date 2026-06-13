@@ -1,0 +1,255 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  name          String
+  role          String    // ADMIN, STUDENT, PARENT, WARDEN, GUARD, STAFF
+  phone         String?
+  avatar        String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Profile relations
+  studentProfile Student?
+  parentProfile  Parent?
+  wardenProfile  Warden?
+  staffProfile   Staff?
+  guardProfile   Guard?
+
+  // System actions
+  auditLogs      AuditLog[]
+  announcements  Announcement[]
+}
+
+model Student {
+  id                  String         @id @default(uuid())
+  userId              String         @unique
+  user                User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rollNumber          String         @unique
+  branch              String
+  year                Int
+  gender              String
+  specialRequirements String?
+  preferences         String?        // Preferences (e.g. AC, Single room, etc.)
+  parentId            String?
+  parent              Parent?        @relation(fields: [parentId], references: [id])
+  
+  // Accommodation
+  bedId               String?        @unique
+  bed                 Bed?           @relation(fields: [bedId], references: [id])
+  
+  // Action histories
+  complaints          Complaint[]
+  leaveRequests       LeaveRequest[]
+  gatePasses          GatePass[]
+  visitors            Visitor[]
+  fees                Fee[]
+  electricityBills    ElectricityBill[]
+  sosRequests         EmergencySos[]
+}
+
+model Parent {
+  id        String    @id @default(uuid())
+  userId    String    @unique
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  students  Student[]
+}
+
+model Warden {
+  id         String    @id @default(uuid())
+  userId     String    @unique
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  buildingId String?
+  building   Building? @relation(fields: [buildingId], references: [id])
+}
+
+model Staff {
+  id         String      @id @default(uuid())
+  userId     String      @unique
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  department String      // e.g. ELECTRICAL, PLUMBING
+  complaints Complaint[]
+}
+
+model Guard {
+  id     String @id @default(uuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Building {
+  id            String         @id @default(uuid())
+  name          String         @unique // e.g. "Aryabhatta Hall"
+  floors        Floor[]
+  wardens       Warden[]
+  announcements Announcement[]
+}
+
+model Floor {
+  id         String   @id @default(uuid())
+  number     Int      // e.g. 1, 2, 3
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  rooms      Room[]
+
+  @@unique([buildingId, number])
+}
+
+model Room {
+  id             String            @id @default(uuid())
+  number         String            // e.g. "101", "102"
+  type           String            // e.g. "SINGLE", "DOUBLE", "TRIPLE"
+  floorId        String
+  floor          Floor             @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  beds           Bed[]
+  bills          ElectricityBill[]
+
+  @@unique([floorId, number])
+}
+
+model Bed {
+  id         String   @id @default(uuid())
+  number     String   // e.g. "A", "B"
+  roomId     String
+  room       Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  student    Student?
+  isOccupied Boolean  @default(false)
+
+  @@unique([roomId, number])
+}
+
+model Complaint {
+  id                 String            @id @default(uuid())
+  category           String            // ELECTRICAL, PLUMBING, etc.
+  description        String
+  priority           String            // LOW, MEDIUM, HIGH, EMERGENCY
+  status             String            @default("OPEN") // OPEN, ASSIGNED, IN_PROGRESS, RESOLVED, CLOSED
+  photoUrl           String?
+  studentId          String
+  student            Student           @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  assignedStaffId    String?
+  assignedStaff      Staff?            @relation(fields: [assignedStaffId], references: [id])
+  maintenanceReport  String?
+  escalationCount    Int               @default(0)
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime          @updatedAt
+}
+
+model LeaveRequest {
+  id               String      @id @default(uuid())
+  studentId        String
+  student          Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  departureDate    DateTime
+  returnDate       DateTime
+  reason           String
+  parentConfirmed  Boolean     @default(false)
+  status           String      @default("PENDING") // PENDING, APPROVED, REJECTED
+  approvedById     String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model GatePass {
+  id              String         @id @default(uuid())
+  studentId       String
+  student         Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  destination     String
+  exitTime        DateTime
+  returnTime      DateTime
+  qrCode          String         @unique // Random token or signed identifier
+  status          String         @default("PENDING") // PENDING, APPROVED, EXITED, RETURNED, REJECTED
+  scannedById     String?        // Guard who scanned
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+}
+
+model Visitor {
+  id             String        @id @default(uuid())
+  studentId      String
+  student        Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  name           String
+  mobile         String
+  idProof        String
+  purpose        String
+  relation       String
+  qrCode         String        @unique
+  status         String        @default("PENDING") // PENDING, APPROVED, CHECKED_IN, CHECKED_OUT, REJECTED
+  checkInTime    DateTime?
+  checkOutTime   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+}
+
+model Fee {
+  id          String    @id @default(uuid())
+  studentId   String
+  student     Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  amount      Float
+  type        String    // e.g. "HOSTEL_FEE", "SECURITY_DEPOSIT", "FINE"
+  dueDate     DateTime
+  status      String    @default("UNPAID") // UNPAID, PAID, OVERDUE
+  paidAt      DateTime?
+  invoiceUrl  String?
+  receiptUrl  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model ElectricityBill {
+  id             String    @id @default(uuid())
+  studentId      String
+  student        Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  roomId         String
+  room           Room      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  month          Int
+  year           Int
+  readingPrev    Float
+  readingCurrent Float
+  consumption    Float
+  rate           Float     // Cost per unit
+  amount         Float
+  status         String    @default("UNPAID") // UNPAID, PAID, OVERDUE
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([roomId, month, year])
+}
+
+model Announcement {
+  id         String    @id @default(uuid())
+  title      String
+  content    String
+  targetRole String    // "ALL", "STUDENT", "WARDEN", etc.
+  buildingId String?
+  building   Building? @relation(fields: [buildingId], references: [id])
+  createdById String
+  creator    User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  createdAt  DateTime  @default(now())
+}
+
+model EmergencySos {
+  id           String    @id @default(uuid())
+  studentId    String
+  student      Student   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status       String    @default("ACTIVE") // ACTIVE, RESOLVED
+  resolvedById String?
+  resolvedAt   DateTime?
+  createdAt    DateTime  @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action    String
+  timestamp DateTime @default(now())
+}

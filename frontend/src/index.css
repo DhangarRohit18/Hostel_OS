@@ -1,0 +1,235 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    background-color: #f8fafc !important;
+    color: #0f172a !important;
+    font-family: 'Plus Jakarta Sans', 'Outfit', sans-serif !important;
+    letter-spacing: -0.01em;
+  }
+}
+
+/* Premium global styling overrides - Blue and White Theme */
+
+.glass-panel {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01), 0 1px 2px -1px rgba(0, 0, 0, 0.01), 0 10px 15px -3px rgba(37, 99, 235, 0.03) !important;
+  border-radius: 1.25rem !important;
+  padding: 1.75rem !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+.glass-panel:hover {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.01), 0 1px 2px -1px rgba(0, 0, 0, 0.01), 0 20px 25px -5px rgba(37, 99, 235, 0.06) !important;
+}
+
+/* Container backgrounds */
+.bg-slate-900\/50, 
+.bg-[#0b0f19], 
+.bg-[#0d1222]\/80, 
+.bg-[#090d16], 
+.bg-slate-900\/60,
+.bg-slate-900\/80 {
+  background-color: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+  border-radius: 1rem !important;
+}
+
+.bg-slate-950\/45,
+.bg-slate-50,
+.bg-slate-900\/10 {
+  background-color: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+/* Typography contrast improvements - Blue theme */
+.text-slate-100, 
+.text-slate-200, 
+.text-slate-300, 
+.text-slate-400,
+.text-indigo-100 {
+  color: #1e293b !important;
+}
+
+.text-slate-500,
+.text-slate-400 {
+  color: #64748b !important;
+}
+
+.text-indigo-300,
+.text-indigo-400,
+.text-blue-600 {
+  color: #2563eb !important;
+  font-weight: 600;
+}
+
+/* Premium Form Elements */
+input, 
+select, 
+textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 0.75rem !important;
+  padding-top: 0.75rem !important;
+  padding-bottom: 0.75rem !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s ease-in-out !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+}
+
+input.pl-10 {
+  padding-left: 2.5rem !important;
+}
+
+input:focus, 
+select:focus, 
+textarea:focus {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08) !important;
+  outline: none !important;
+}
+
+/* Action button gradients - Corporate Blue */
+button[type="submit"],
+.w-full.py-3.bg-indigo-600,
+.px-4.py-2.bg-indigo-600,
+.px-3.py-1.bg-indigo-600,
+.px-4.py-1.5.bg-indigo-600,
+.bg-gradient-to-r.from-indigo-600 {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  border-radius: 0.75rem !important;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.15), 0 2px 4px -2px rgba(37, 99, 235, 0.1) !important;
+  border: none !important;
+  transition: all 0.2s ease !important;
+}
+
+button[type="submit"]:hover,
+.w-full.py-3.bg-indigo-600:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 10px 15px -3px rgba(37, 99, 235, 0.2), 0 4px 6px -4px rgba(37, 99, 235, 0.15) !important;
+}
+
+button[type="submit"]:active {
+  transform: translateY(0px) !important;
+}
+
+/* Premium Navigation Pill Container */
+.flex.flex-wrap.gap-2.border-b {
+  background-color: #f1f5f9 !important;
+  padding: 0.375rem !important;
+  border-radius: 0.875rem !important;
+  border: 1px solid #e2e8f0 !important;
+  display: inline-flex !important;
+  width: auto !important;
+  gap: 0.25rem !important;
+}
+
+/* Tab actions */
+.flex.flex-wrap.gap-2.border-b button {
+  border: none !important;
+  padding: 0.5rem 1.25rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 600 !important;
+  border-radius: 0.625rem !important;
+  transition: all 0.2s ease !important;
+}
+
+/* Active tab override - Blue active */
+.bg-indigo-600.border-indigo-500,
+.bg-indigo-600.text-white {
+  background: #ffffff !important;
+  color: #2563eb !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.bg-indigo-600.text-white *,
+.bg-indigo-600.border-indigo-500 * {
+  color: #2563eb !important;
+}
+
+/* List details */
+.bg-slate-900\/50 {
+  border-left: 4px solid #e2e8f0 !important;
+  background-color: #ffffff !important;
+  padding: 1.25rem 1.5rem !important;
+  transition: all 0.2s ease !important;
+}
+
+.bg-slate-900\/50:hover {
+  border-left-color: #2563eb !important;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Badges */
+.bg-green-950.text-green-300,
+.bg-green-950,
+span.bg-green-950 {
+  background-color: #f0fdf4 !important;
+  color: #166534 !important;
+  border: 1px solid #bbf7d0 !important;
+  font-weight: 600 !important;
+  padding: 0.25rem 0.625rem !important;
+}
+
+.bg-red-950.text-red-300,
+.bg-red-950,
+span.bg-red-950 {
+  background-color: #fef2f2 !important;
+  color: #991b1b !important;
+  border: 1px solid #fecaca !important;
+  font-weight: 600 !important;
+  padding: 0.25rem 0.625rem !important;
+}
+
+.bg-yellow-950.text-yellow-300,
+.bg-yellow-950,
+span.bg-yellow-950 {
+  background-color: #fffbeb !important;
+  color: #854d0e !important;
+  border: 1px solid #fef08a !important;
+  font-weight: 600 !important;
+  padding: 0.25rem 0.625rem !important;
+}
+
+.bg-blue-950.text-blue-300,
+.bg-blue-950,
+span.bg-blue-950 {
+  background-color: #eff6ff !important;
+  color: #1e40af !important;
+  border: 1px solid #bfdbfe !important;
+  font-weight: 600 !important;
+  padding: 0.25rem 0.625rem !important;
+}
+
+/* Emergency pulse */
+@keyframes sosPulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+.sos-pulse-animation {
+  animation: sosPulse 2s infinite;
+}
+
