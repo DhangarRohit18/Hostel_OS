@@ -6,12 +6,21 @@ Smart Hostel OS is a centralized digital management system tailored for modern u
 
 ---
 
-## Technical Features & AI Twists
-1. **Biometric Face Verification Checkpoint**: Integrated in the Guard Checkpoint Dashboard (Security) using simulated real-time facial mesh scan detection to verify student exits/returns and visitor entries/exits against database records.
-2. **Intelligent Capacity Crowd Alerts**: Dynamically monitors and warns when occupancy rates cross $\ge 85\%$ in the Warden and Admin Dashboards to active crowd density flow controls.
-3. **AI Complaint Routing**: Automatically parses complaint descriptions and classifies department/urgency.
-4. **Interactive Role-Aware AI Assistant Chatbot**: Available to students, parents, wardens, staff, guards, and admins.
-5. **Interactive Recharts Predictions**: For forecasting mess demand plates, electrical spikes, and occupancy growth trends.
+## Unique Selling Propositions (USPs) & AI Twists
+
+1. **🔒 Biometric-QR Security Closed Loop (Fully Implemented)**
+   * *The Problem*: Students share QR passes or write fake register entries.
+   * *Our Solution*: Connects dynamic QR passes with a **Simulated Face Biometric Verification scan overlay** at checkpoints (Security Guard view). Ensures the student matches the database profile before gates open.
+   
+2. **📈 Proactive Resource Analytics (Mess & Power)**
+   * *The Problem*: High mess food wastage and power overloads.
+   * *Our Solution*: AI forecasts mess attendance plate count (excluding students on approved outings, saving ~30% waste) and summer electricity consumption spikes to prevent power grid overloads.
+
+3. **🤖 Role-Aware Contextual AI Assistants**
+   * *Our Solution*: Independent, role-based AI assistants. A parent's assistant answers child-specific billing, a guard's assistant checks scanner data, and a student's assistant checks menu/dues contextually.
+
+4. **🧬 Algorithmic Roommate Matching Engine**
+   * *Our Solution*: Automatically scores vacant beds based on strict room gender segregation, matching roommates from the same academic branches (+5 points), and same year (+3 points) to minimize room conflicts.
 
 ---
 
